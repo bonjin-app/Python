@@ -1,0 +1,1 @@
+docker build -t html2pdf .

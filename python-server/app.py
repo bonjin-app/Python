@@ -11,11 +11,10 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 @app.route('/convert/v2/url2pdf', methods = ['POST'])
 def convert_url2pdf():
     url = request.form.get('url')
-    filename = request.form.get('filename', 'output')
-    timeout = int(request.form.get('timeout', 2))
+    timeout = request.form.get('timeout', '2');
     
     # PDF로 변환
-    converter.convert(url, 'output.pdf', timeout=timeout)
+    converter.convert(url, 'output.pdf', timeout=int(timeout))
     
     path = os.path.abspath('output.pdf')
     
@@ -36,10 +35,13 @@ def convert_url2pdf():
 def convert_v2_html2pdf():
     # HTML 파일을 읽어옴
     file = request.files['file']
+    timeout = request.form.get('timeout', '2');
     file.save('input.html')
     
-    # 저장한 HTML 파일을 읽어와서 PDF 파일로 변환
-    os.system('wkhtmltopdf input.html output.pdf')
+    delay = int(timeout) * 1000
+    
+    # PDF로 변환
+    os.system(f'wkhtmltopdf --javascript-delay {delay} input.html output.pdf')
     
     path = os.path.abspath('output.pdf')
     
@@ -63,12 +65,8 @@ def convert_html2pdf():
     # HTML 파일을 읽어옴
     html = request.files['file'].read().decode('utf-8')
     
-    # timeout 값을 받아와서 설정
-    timeout = request.form.get('timeout')
-    options = {'timeout': int(timeout)} if timeout else {}
-
     # pdfkit 모듈을 사용하여 PDF로 변환
-    pdf = pdfkit.from_string(html, False, options=options)
+    pdf = pdfkit.from_string(html, False)
     
     # PDF 파일을 HTTP response로 반환
     response = make_response(pdf)
